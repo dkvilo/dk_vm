@@ -1,8 +1,8 @@
 # Build 
-as out.S -o out.o
+nasm -felf64 out.S -o out.o
 
 # Link
-ld out.o -o out -L /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/ -lSystem
+ld out.o -o out
 
 # Run
 ./out
