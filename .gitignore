@@ -1,3 +1,6 @@
 .vscode
 vm
 *.bin
+*.o
+out
+exe
