@@ -188,6 +188,7 @@ vm_exec(VM* vm, int64_t* code, size_t size)
 
     switch (instruction) {
       case NOP: // no operation
+        // return;
         break;
 
       case LOAD:
