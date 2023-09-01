@@ -22,22 +22,24 @@
 #include <stdio.h> // printf
 #endif             // !defined(_STDIO_H)
 
-typedef unsigned char u8_t;
-typedef unsigned short u16_t;
-typedef unsigned int u32_t;
-typedef unsigned long long u64_t;
-typedef short i16_t;
-typedef int i32_t;
-typedef long long i64_t;
-typedef signed char s8_t;
-typedef signed short s16_t;
-typedef signed int s32_t;
-typedef signed long long s64_t;
+#if !defined(_STDLIB_H)
+#include <stdlib.h> // malloc, realloc, free
+#endif              // !defined(_STDLIB_H)
+
+#if !defined(_STDINT_H)
+#include <stdint.h> // int8_t, int16_t, int32_t, int64_t
+#endif               // !defined(_STDINT_H)
+
+typedef uint8_t u8_t;
+typedef uint16_t u16_t;
+typedef uint32_t u32_t;
+typedef uint64_t u64_t;
+typedef int16_t i16_t;
+typedef int32_t i32_t;
+typedef int64_t i64_t;
 typedef float f32_t;
 typedef double f64_t;
-typedef char c_t;
-typedef char b_t;
-typedef const char cc_t;
+typedef uint8_t byte;
 typedef size_t sz_t;
 typedef intptr_t iptr_t;
 typedef uintptr_t uptr_t;
@@ -288,7 +290,7 @@ dk_hashmap_print(dk_hashmap_t* map)
 {
   i32_t i = 0;
   for (i = 0; i < map->capacity; i++) {
-    printf("%d) KEY=%d, VALUE=%s\n", i, map->pairs[i].key, map->pairs[i].value);
+    printf("%d) KEY=%d, VALUE=%s\n", i, map->pairs[i].key, (char*)map->pairs[i].value);
   }
 }
 
@@ -324,39 +326,12 @@ dk_hashmap_resize(dk_hashmap_t* map, i32_t new_capacity)
   dk_hashmap_free(temp_map);
 }
 
-#if 0
-internal i32_t
-dk_hashmap_resolve_collision(dk_hashmap_t* map, i32_t key)
-{
-  i32_t hash = dk_hashmap_hash(map, key);
-  i32_t index = hash;
-  while (map->pairs[index].key != key &&
-         map->pairs[index].key != dk_empty_VALUE) {
-    index++;
-    if (index == map->capacity) {
-      index = 0;
-    }
-  }
-  return index;
-}
-
-internal void
-dk_hashmap_put_with_collision(dk_hashmap_t* map, i32_t key, i32_t value)
-{
-  i32_t index = dk_hashmap_resolve_collision(map, key);
-  map->pairs[index].key = key;
-  map->pairs[index].value = value;
-  map->size++;
-}
-#endif // 0
-
 ///////////////////////////////////////////////////////////////////////////////
 // STACK IMPLEMENTATION
-// Stack is implemented using a HashMap. The HashMap is used to store the data
 //
 typedef struct
 {
-  dk_hashmap_t* map;
+  i32_t* data;
   i32_t capacity;
   i32_t size;
 } dk_stack_t;
@@ -367,53 +342,53 @@ dk_stack_create(i32_t capacity)
   dk_stack_t* stack = (dk_stack_t*)dk_malloc(sizeof(dk_stack_t));
   stack->capacity = capacity;
   stack->size = 0;
-  stack->map = dk_hashmap_create(capacity);
+  stack->data = (i32_t*)dk_malloc(sizeof(i32_t) * capacity);
   return stack;
-}
-
-internal void*
-dk_stack_pop(dk_stack_t* stack)
-{
-  i32_t value = dk_hashmap_get(stack->map, stack->size - 1);
-  dk_hashmap_remove(stack->map, stack->size - 1);
-  stack->size--;
-  return value;
-}
-
-internal void
-dk_stack_push(dk_stack_t* stack, void* value)
-{
-  dk_hashmap_put(stack->map, stack->size, value);
-  stack->size++;
-}
-
-// shifts the stack by the given amount
-internal void
-dk_stack_shift(dk_stack_t* stack, i32_t amount)
-{
-  i32_t i = 0;
-  for (i = 0; i < amount; i++) {
-    dk_stack_pop(stack);
-  }
-}
-
-internal bool
-dk_stack_is_empty(dk_stack_t* stack)
-{
-  return stack->size == 0;
-}
-
-internal void
-dk_stack_print(dk_stack_t* stack)
-{
-  dk_hashmap_print(stack->map);
 }
 
 internal void
 dk_stack_resize(dk_stack_t* stack, i32_t new_capacity)
 {
-  dk_hashmap_resize(stack->map, new_capacity);
+  stack->data = (i32_t*)dk_realloc(stack->data, new_capacity);
   stack->capacity = new_capacity;
+}
+
+internal void
+dk_stack_push(dk_stack_t* stack, i32_t value)
+{
+  if (stack->size == stack->capacity) {
+    dk_stack_resize(stack, stack->capacity * 2);
+  }
+  stack->data[stack->size++] = value;
+}
+
+internal i32_t
+dk_stack_pop(dk_stack_t* stack)
+{
+  if (stack->size == 0) {
+    return 0;
+  }
+  i32_t value = stack->data[--stack->size];
+  if (stack->size > 0 && stack->size == stack->capacity / 4) {
+    dk_stack_resize(stack, stack->capacity / 2);
+  }
+  return value;
+}
+
+internal i32_t
+dk_stack_peek(dk_stack_t* stack)
+{
+  if (stack->size == 0) {
+    return 0;
+  }
+  return stack->data[stack->size - 1];
+}
+
+internal void
+dk_stack_free(dk_stack_t* stack)
+{
+  free(stack->data);
+  free(stack);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -479,15 +454,6 @@ dk_write_to_buffer(u8_t* buffer,
   }
 }
 
-#if 0
-internal void
-pause_callback()
-{
-  printf("Exiting...\n");
-  dk_exit_success();
-}
-#endif
-
 ///////////////////////////////////////////////////////////////////////////////
 // File Utility Functions
 //
@@ -513,7 +479,7 @@ dk_read_from_file_bin(const char* filename, u8_t* data, u32_t size)
 }
 
 internal u8_t*
-dk_read_file(cc_t* p_filename, u32_t* p_size)
+dk_read_file(const char* p_filename, u32_t* p_size)
 {
   FILE* p_file = fopen(p_filename, "r");
   if (!p_file)
@@ -528,4 +494,4 @@ dk_read_file(cc_t* p_filename, u32_t* p_size)
   return p_data;
 }
 
-#endif __DK_H__
+#endif // __DK_H__

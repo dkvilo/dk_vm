@@ -7,8 +7,9 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
 include_directories(vm)
 include_directories(lex)
+include_directories(compiler)
 
-set(SOURCE_FILES vm/vm.c cli/main.c)
+set(SOURCE_FILES vm/vm.c compiler/symbol_table.c compiler/code_gen.c compiler/bytecode_parser.c cli/main.c)
 add_executable(dk_cli ${SOURCE_FILES})
 
 function(linx_lex_lib)

@@ -220,19 +220,23 @@ vm_exec(VM* vm, int64_t* code, size_t size)
       } break;
 
       case ADD: {
-        /**
-         * NOTE: ADD instruction does following:
-         *  - pop the top value from the stack
-         * - add it to the ACC
-         * - store the result in the ACC
-         */
         if (vm->sp <= 0) {
           printf("ADD: Stack underflow error!\n");
           return;
         }
 
-        int64_t value = vm->stack[--vm->sp];
-        vm->ACC += value;
+        int64_t a = vm->stack[--vm->sp];
+        int64_t b = vm->stack[--vm->sp];
+
+        // clear the stack
+        for (int i = 0; i < vm->sp; i++) {
+          vm->stack[i] = 0;
+        }
+
+        vm->sp = 0;
+
+        int64_t value = a + b;
+        vm->ACC = value;
       } break;
       
       case STORE: {
