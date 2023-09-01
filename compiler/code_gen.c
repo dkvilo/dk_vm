@@ -1,11 +1,12 @@
 #include "code_gen.h"
 #include "vm.h"
 
+#include <stdio.h>
+
 void
 compile(int64_t bytecode[], size_t size)
 {
-  const int8_t* include = "%include \"backend/x86_64/std.S\"\n";
-  printf("%s", include);
+  printf("%s", "%include \"backend/x86_64/std.S\"\n");
   printf("section .text\n");
   printf("global _start\n");
   printf("_start:\n");
@@ -15,8 +16,8 @@ compile(int64_t bytecode[], size_t size)
     OpCode opcode = bytecode[i];
     if (opcode == LOAD) {
       int64_t value = bytecode[i + 1];
-      printf(";; --- LOAD %ld\n", value);
-      printf("  push %ld\n", value);
+      printf(";; --- LOAD %lld\n", value);
+      printf("  push %lld\n", value);
     }
 
     else if (opcode == ADD) {
