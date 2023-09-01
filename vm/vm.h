@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define MEMORY_SIZE 1024
+#define MEMORY_SIZE 1024 * 1000
 #define STACK_SIZE 256
 
 // Instruction set
@@ -24,17 +24,6 @@ typedef enum
   POP = 0xB,
   RET = 0xE,
   LOADS = 0x10,
-
-  CALL_IFGT = 0x11,  // call if greater than (if ACC > operand1)
-  CALL_IFLT = 0x12,  // call if less than (if ACC < operand1)
-  CALL_IFEQ = 0x13,  // call if equal (if ACC == operand1)
-  CALL_IFNEQ = 0x14, // call if not equal (if ACC != operand1)
-
-  HALT_IFEQ = 0x15,  // halt if equal (if ACC == operand1)
-  HALT_IFNEQ = 0x16, // halt if not equal (if ACC != operand1)
-  HALT_IFGT = 0x17,  // halt if greater than (if ACC > operand1)
-  HALT_IFLT = 0x18,  // halt if less than (if ACC < operand1)
-
   DEC = 0x19, // Decrement ACC (parameter is ignored)
   INC = 0x1A, // Increment ACC (parameter is ignored)
   STORE = 0x1B, // Store ACC in memory (parameter is memory address)

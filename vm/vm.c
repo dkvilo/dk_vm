@@ -28,7 +28,7 @@ vm_print_state(VM* vm)
   printf("\nSTACK: \n\n");
   printf(" - [");
   for (int i = 0; i < vm->sp; i++) {
-    printf(YELLOW"%ld"RESET, vm->stack[i]);
+    printf(YELLOW"%lld"RESET, vm->stack[i]);
     if (i < vm->sp - 1) {
       printf(", ");
     }
@@ -36,16 +36,12 @@ vm_print_state(VM* vm)
   printf("]\n\n");
 
   printf("Memory:\n\n");
-  for (int32_t i = 0; i < MEMORY_SIZE; i += 4) {
+  for (int64_t i = 0; i < MEMORY_SIZE; i += 4) {
     if (vm->memory[i] == 0 && vm->memory[i + 1] == 0 &&
         vm->memory[i + 2] == 0 && vm->memory[i + 3] == 0) {
       continue;
     }
-    if ((OpCode)vm->memory[i] == CALL || 
-      (OpCode)vm->memory[i] == CALL_IFEQ ||
-      (OpCode)vm->memory[i] == CALL_IFNEQ ||
-      (OpCode)vm->memory[i] == CALL_IFLT ||
-      (OpCode)vm->memory[i] == CALL_IFGT ||
+    if ((OpCode)vm->memory[i] == CALL ||
       (OpCode)vm->memory[i] == RET
     ) {
     printf(YELLOW" - [0x%02lx\t%ld\t%ld\t%ld]\t\t%s\t\taddr\t0x%08x\n"RESET,
@@ -66,11 +62,11 @@ vm_print_state(VM* vm)
            }
   }
   printf("\n");
-  printf("[ACC %ld | ", vm->ACC);
-  printf("PC %ld | ", vm->pc);
-  printf("SP %ld]\n\n", vm->sp);
+  printf("[ACC %lld | ", vm->ACC);
+  printf("PC %lld | ", vm->pc);
+  printf("SP %lld]\n\n", vm->sp);
 
-  printf("Memory Footprint: %ld/%ld Bytes\n\n", vm->pc * sizeof(uint64_t), sizeof(int32_t) * MEMORY_SIZE);
+  printf("Memory Footprint: %llu/%ld Bytes\n\n", vm->pc * sizeof(uint64_t), sizeof(int32_t) * MEMORY_SIZE);
 
   #undef RED
   #undef GREEN
@@ -79,97 +75,31 @@ vm_print_state(VM* vm)
   #undef RESET
 }
 
-
 char*
 inst_to_str(OpCode opcode)
 {
   switch (opcode) {
-    case NOP:
-      return "NOP";
-      break;
-
-    case LOAD:
-      return "LOAD";
-      break;
-
-    case ADD:
-      return "ADD";
-      break;
-
-    case DIV:
-      return "DIV";
-      break;
-
-    case MUL:
-      return "MUL";
-      break;
-
-    case SUB:
-      return "SUB";
-      break;
-
-    case JMP:
-      return "JMP";
-      break;
-
-    case CALL_IFEQ:
-    case CALL_IFNEQ:
-    case CALL_IFGT:
-    case CALL_IFLT:
-    case CALL:
-      return "CALL";
-      break;
-
-    case JZ:
-      return "JZ";
-      break;
-
-    case JNZ:
-      return "JNZ";
-      break;
-
-    case PUSH:
-      return "PUSH";
-      break;
-
-    case POP:
-      return "POP";
-      break;
-
-    case DEC:
-      return "DEC";
-      break;
-
-    case INC:
-      return "INC";
-      break;
-
-    case STORE:
-      return "STORE";
-      break;
-
-    case LOADS:
-      return "LOADS";
-      break;
-
-    case HALT_IFEQ:
-    case HALT_IFNEQ:
-    case HALT_IFGT:
-    case HALT_IFLT:
-    case HALT:
-      return "HALT";
-      break;
-
-    case RET:
-      return "RET";
-      break;
-
-    default:
-      return "UNKNOWN";
-      break;
+    case NOP: return "NOP"; break;
+    case LOAD: return "LOAD"; break;
+    case ADD: return "ADD"; break;
+    case DIV: return "DIV"; break;
+    case MUL: return "MUL"; break;
+    case SUB: return "SUB"; break;
+    case JMP: return "JMP"; break;
+    case CALL: return "CALL"; break;
+    case JZ: return "JZ"; break;
+    case JNZ: return "JNZ"; break;
+    case PUSH: return "PUSH"; break;
+    case POP: return "POP"; break;
+    case DEC: return "DEC"; break;
+    case INC: return "INC"; break;
+    case STORE: return "STORE"; break;
+    case LOADS: return "LOADS"; break;
+    case HALT: return "HALT"; break;
+    case RET: return "RET"; break;
+    default: return "UNKNOWN"; break;
   }
 }
-
 
 void
 vm_exec(VM* vm, int64_t* code, size_t size)

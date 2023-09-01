@@ -7,7 +7,7 @@
 #include "symbol_table.h"
 #include "code_gen.h"
 
-#define BYTECODE_SIZE 256
+#define BYTECODE_SIZE 1024
 static int64_t *__bytecode = NULL;
 
 static symbol_hashmap_t *symbol_table = NULL;

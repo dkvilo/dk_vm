@@ -1,47 +1,32 @@
 #include "bytecode_parser.h"
 #include "vm.h"
 
-int8_t*
+char*
 ext__dk_token_type_to_str(dk_token_type_t type)
 {
-  if (type == DK_TOKEN_IDENTIFIER) {
-    return "identifier";
+  switch (type)
+  {
+  case DK_TOKEN_IDENTIFIER: return "Identifier";
+  case DK_TOKEN_NUMBER: return "Number";
+  case DK_TOKEN_STRING: return "String";
+  case DK_TOKEN_OPERATOR: return "Operator";
+  case DK_TOKEN_KEYWORD: return "Keyword";
+  case DK_TOKEN_END_OF_FILE: return "Eof";
+  case DK_TOKEN_END_OF_STATEMENT: return "Eos";
+  case DK_TOKEN_WHITESPACE: return "Whitespace";
+  case DK_TOKEN_COMMENT: return "Commnet";
+  default: return "Unknown";
   }
-
-  if (type == DK_TOKEN_NUMBER) {
-    return "number";
-  }
-
-  if (type == DK_TOKEN_STRING) {
-    return "string";
-  }
-
-  if (type == DK_TOKEN_OPERATOR) {
-    return "operator";
-  }
-
-  if (type == DK_TOKEN_KEYWORD) {
-    return "keyword";
-  }
-
-  if (type == DK_TOKEN_END_OF_FILE) {
-    return "end of file";
-  }
-
-  if (type == DK_TOKEN_END_OF_STATEMENT) {
-    return "end of statement";
-  }
-
-  if (type == DK_TOKEN_WHITESPACE) {
-    return "whitespace";
-  }
-
-  if (type == DK_TOKEN_COMMENT) {
-    return "comment";
-  }
-
-  return "unknown";
 }
+
+#define HANDLE_OPERATOR(OPERATOR, A, B)              \
+    ({                                               \
+        strcmp(OPERATOR, "+") == 0 ? (A += B) :      \
+        strcmp(OPERATOR, "-") == 0 ? (A -= B) :      \
+        strcmp(OPERATOR, "*") == 0 ? (A *= B) :      \
+        strcmp(OPERATOR, "/") == 0 ? (A /= B) :      \
+        0;                                           \
+    })
 
 bool
 parse_variable_declaration(dk_lexer_t lexer, int64_t *__bytecode, symbol_hashmap_t *symbol_table, int32_t itteration)
@@ -49,7 +34,7 @@ parse_variable_declaration(dk_lexer_t lexer, int64_t *__bytecode, symbol_hashmap
 
   bool is_variable_declaration_valid = true;
 
-  char *variable_name = NULL;
+  int8_t *variable_name = NULL;
   int64_t variable_value = 0;
 
   lexer.cursor++;
@@ -59,6 +44,7 @@ parse_variable_declaration(dk_lexer_t lexer, int64_t *__bytecode, symbol_hashmap
     is_variable_declaration_valid = false;
     exit(1);
   }
+
   variable_name = token->p_data;
 
   lexer.cursor++;
@@ -70,19 +56,67 @@ parse_variable_declaration(dk_lexer_t lexer, int64_t *__bytecode, symbol_hashmap
   }
 
   lexer.cursor++;
-  if (strcmp(token->p_data, "=") != 0) {
+  if (strcmp((const char*)token->p_data, "=") != 0) {
     printf("Error: expected assigment operator '=', but got %s(%s)\n", ext__dk_token_type_to_str(token->type), token->p_data);
     is_variable_declaration_valid = false;
     exit(1);
   }
 
   token = dk_lexer_next_token(&lexer);
-  if (token->type != DK_TOKEN_NUMBER) {
-    printf("Error: expected number, but got %s(%s)\n", ext__dk_token_type_to_str(token->type), token->p_data);
-    is_variable_declaration_valid = false;
-    exit(1);
+  if (token->type == DK_TOKEN_NUMBER) {
+    variable_value = atoi((const char*)token->p_data);
+  } else if (token->type == DK_TOKEN_IDENTIFIER) {
+    char* v_name = token->p_data;
+    bool is_valid_var_reference = symbol_table_contains(symbol_table, v_name);
+    if (!is_valid_var_reference) {
+      is_variable_declaration_valid = false;
+      printf("Error: undefined variable was referenced %s(%s)\n", ext__dk_token_type_to_str(token->type), token->p_data);
+      exit(1);
+    }
+
+    /* get variable value from symbols table */
+    symbol_t symbol = symbol_table_get(symbol_table, v_name);
+    variable_value = symbol.value;
   }
-  variable_value = atoi(token->p_data);
+  lexer.cursor++;
+
+  token = dk_lexer_next_token(&lexer);
+  if (token->type == DK_TOKEN_OPERATOR) {
+    bool is_math_expr =
+      strcmp((const char*)token->p_data, "+") == 0 ||
+      strcmp((const char*)token->p_data, "-") == 0 ||
+      strcmp((const char*)token->p_data, "*") == 0 ||
+      strcmp((const char*)token->p_data, "/") == 0;
+    
+    const char* expr = (const char*)token->p_data;
+    if (is_math_expr) {
+      // now we are looking for either lvalue or lvalue, if not we are erroring out
+      lexer.cursor++;
+      token = dk_lexer_next_token(&lexer);
+      if (token->type == DK_TOKEN_NUMBER) {
+        HANDLE_OPERATOR(expr, variable_value, atoi((const char*)token->p_data));
+      } else if (token->type == DK_TOKEN_IDENTIFIER) {
+        char* v_name = token->p_data;
+        bool is_valid_var_reference = symbol_table_contains(symbol_table, v_name);
+        if (!is_valid_var_reference) {
+          is_variable_declaration_valid = false;
+          printf("Error: undefined variable was referenced %s(%s)\n", ext__dk_token_type_to_str(token->type), token->p_data);
+          exit(1);
+        }
+
+        /* get variable value from symbols table */
+        symbol_t symbol = symbol_table_get(symbol_table, v_name);
+
+        HANDLE_OPERATOR(expr, variable_value, symbol.value);
+      } else {
+        printf("\nError: incomplete variable declaration, math expretion was not finalized.\n", variable_name);
+        is_variable_declaration_valid = false;
+        exit(1); 
+      }
+    }
+  }
+
+  lexer.cursor++;
 
   if (symbol_table_contains(symbol_table, variable_name)) {
     printf("\nError: variable %s already was defined in the scope\n", variable_name);
@@ -158,6 +192,11 @@ parse_addition(dk_lexer_t lexer, int64_t *__bytecode, int64_t itteration)
   }
 
   /* Generate bytecode */
+  __bytecode[offset + 0] = NOP;
+  __bytecode[offset + 1] = 0;
+  __bytecode[offset + 2] = 0;
+  __bytecode[offset + 3] = 0;
+
   __bytecode[offset + 4] = LOAD;
   __bytecode[offset + 5] = a;
   __bytecode[offset + 6] = 0;
@@ -201,11 +240,9 @@ parse_and_tokenize(const char* filename, int64_t *__bytecode, size_t byte_code_c
   dk_lexer_t *lex = dk_lexer_create(p_data, p_size * sizeof(u8_t));
   
   int64_t variable_itteration = 0;
+  dk_token_t *token = NULL;
 
-  while (true) {
-
-    dk_token_t *token = dk_lexer_next_token(lex);
-
+  while (token != NULL, token = dk_lexer_next_token(lex)) {
     if (token->type == DK_TOKEN_WHITESPACE || token->type == DK_TOKEN_COMMENT) {
       continue;
     }
@@ -218,20 +255,20 @@ parse_and_tokenize(const char* filename, int64_t *__bytecode, size_t byte_code_c
       }
     }
 
-    if (token->type == DK_TOKEN_IDENTIFIER) {
-      if (strcmp(token->p_data, "add") == 0) {
-        if (!parse_addition(*lex, __bytecode, variable_itteration)) {
-          printf("Illegal addition\n");
-        }
-      }
-    }
+    // if (token->type == DK_TOKEN_IDENTIFIER) {
+    //   if (strcmp(token->p_data, "add") == 0) {
+    //     if (!parse_addition(*lex, __bytecode, variable_itteration)) {
+    //       printf("Illegal addition\n");
+    //     }
+    //   }
+    // }
 
     if (token->type == DK_TOKEN_UNKNOWN) {
       printf("Error: unknown token\n");
       exit(1);
     }
 
-    if (token->type == DK_TOKEN_END_OF_FILE || token->type == DK_TOKEN_UNKNOWN) {
+    if (token->type == DK_TOKEN_END_OF_FILE || token->type == DK_TOKEN_UNKNOWN || token->type == DK_TOKEN_SEMICOLON) {
       break;
     }
 

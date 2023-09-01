@@ -30,7 +30,7 @@
 #include <stdint.h> // int8_t, int16_t, int32_t, int64_t
 #endif               // !defined(_STDINT_H)
 
-typedef uint8_t u8_t;
+typedef int8_t u8_t;
 typedef uint16_t u16_t;
 typedef uint32_t u32_t;
 typedef uint64_t u64_t;

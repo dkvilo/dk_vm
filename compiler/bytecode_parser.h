@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-int8_t*
+char*
 ext__dk_token_type_to_str(dk_token_type_t type);
 
 bool

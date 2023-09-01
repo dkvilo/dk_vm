@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 typedef struct symbol_t {
-  char *name;
+  int8_t *name;
   union
   {
     int64_t value;
@@ -19,15 +19,15 @@ typedef struct symbol_hashmap_t {
   int count;
 } symbol_hashmap_t;
 
-void symbol_table_add(symbol_hashmap_t *table, char *name, int64_t value);
+void symbol_table_add(symbol_hashmap_t *table, int8_t *name, int64_t value);
 
 symbol_t symbol_table_get_by_index(symbol_hashmap_t *table, int index);
 
-bool symbol_table_contains(symbol_hashmap_t *table, char *name);
+bool symbol_table_contains(symbol_hashmap_t *table, int8_t *name);
 
-symbol_t symbol_table_get(symbol_hashmap_t *table, char *name);
+symbol_t symbol_table_get(symbol_hashmap_t *table, int8_t *name);
 
-void symbol_table_remove(symbol_hashmap_t *table, char *name);
+void symbol_table_remove(symbol_hashmap_t *table, int8_t *name);
 
 void symbol_table_print(symbol_hashmap_t *table);
 
