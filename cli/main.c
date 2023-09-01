@@ -49,10 +49,10 @@ main(int argc, char** argv)
     vm_init(&vm);
     vm_exec(&vm, __bytecode, sizeof(int64_t) * BYTECODE_SIZE);
     vm_print_state(&vm);
-  }
 
-  printf("-----------------------\nSymbol table (%d):\n", symbol_table->count);
-  symbol_table_print(symbol_table);
+    printf("-----------------------\nSymbol table (%d):\n", symbol_table->count);
+    symbol_table_print(symbol_table);
+  }
 
   return 0;
 }
