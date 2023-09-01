@@ -144,6 +144,10 @@ inst_to_str(OpCode opcode)
       return "INC";
       break;
 
+    case STORE:
+      return "STORE";
+      break;
+
     case LOADS:
       return "LOADS";
       break;
@@ -175,184 +179,111 @@ vm_exec(VM* vm, int64_t* code, size_t size)
   int running = 1;
 
   while (running) {
-    if (vm->pc < 0 || vm->pc >= size) {
-        fprintf(stderr, "Error: program counter out of bounds\n");
-        exit(EXIT_FAILURE);
+
+    if (vm->pc < 0 || vm->pc >= MEMORY_SIZE) {
+      fprintf(stderr, "Error: program counter out of bounds\n");
+      exit(EXIT_FAILURE);
     }
 
     OpCode instruction = vm->memory[vm->pc++];
-    
+
     int64_t operand1 = vm->memory[vm->pc++];
     int64_t operand2 = vm->memory[vm->pc++];
     int64_t operand3 = vm->memory[vm->pc++];
 
     switch (instruction) {
-      case NOP: // no operation
-        // return;
-        break;
+      case NOP: break;
+      case LOAD: { vm->ACC = operand1; } break;
 
-      case LOAD:
-        vm->ACC = operand1;
-        break;
-
-      case PUSH:
+      case PUSH: {
         if (vm->sp >= STACK_SIZE) {
-          printf("Stack overflow error!\n");
+          printf("PUSH: Stack overflow error!\n");
           return;
         }
         vm->stack[vm->sp++] = vm->ACC;
-        break;
+      } break;
 
-      case LOADS:
+      case LOADS: {
         if (operand1 >= STACK_SIZE) {
-          printf("Stack underflow error!\n");
+          printf("LOADS: Stack underflow error!\n");
           return;
         }
         vm->ACC = vm->stack[operand1];
-        break;
+      } break;
 
-      case POP:
+      case POP: {
         if (vm->sp <= 0) {
-          printf("Stack underflow error!\n");
+          printf("Error: Unable to execute POP instruction, Stack underflow!\n");
           return;
         }
         vm->ACC = vm->stack[--vm->sp];
-        break;
+      } break;
 
-      case ADD:
-        vm->ACC += operand1;
-        break;
+      case ADD: {
+        /**
+         * NOTE: ADD instruction does following:
+         *  - pop the top value from the stack
+         * - add it to the ACC
+         * - store the result in the ACC
+         */
+        if (vm->sp <= 0) {
+          printf("ADD: Stack underflow error!\n");
+          return;
+        }
 
-      case SUB:
-        vm->ACC -= operand1;
-        break;
+        int64_t value = vm->stack[--vm->sp];
+        vm->ACC += value;
+      } break;
+      
+      case STORE: {
+        if (operand1 < 0 || operand1 >= MEMORY_SIZE) {
+            fprintf(stderr, "Error: Invalid memory address for STORE instruction\n");
+            exit(EXIT_FAILURE);
+        }
+        vm->memory[operand1] = vm->ACC;
+      } break;
 
-      case MUL:
-        vm->ACC *= operand1;
-        break;
+      case SUB: { vm->ACC -= operand1; } break;
+      case MUL: { vm->ACC *= operand1; } break;
+      case DIV: { vm->ACC /= operand1; } break;
+      case JMP: { vm->pc = operand1; } break;
 
-      case DIV:
-        vm->ACC /= operand1;
-        break;
+      case INC: { vm->ACC++; } break;
+      case DEC: { vm->ACC--; } break;
 
-      case JMP:
-        vm->pc = operand1;
-        break;
-
-      case DEC:
-        vm->ACC--;
-        break;
-
-      case JZ:
+      case JZ: {
         if (vm->ACC == 0) {
           vm->pc = operand1;
         }
-        break;
+      } break;
 
-      case CALL:
+      case JNZ: {
+        if (vm->ACC != 0) {
+          vm->pc = operand1;
+        }
+      } break;
+
+      case CALL: {
         if (vm->sp >= STACK_SIZE) {
-          printf("Stack overflow error!\n");
+          printf("CALL: Stack overflow error!\n");
           return;
         }
         // push the address of the next instruction onto the stack
         vm->stack[vm->sp++] = vm->pc;
-
         // jump to the address specified by the operand
         vm->pc = operand1;
-        break;
-      
-      case CALL_IFEQ:{
-        if (vm->ACC == operand2) {
-          if (vm->sp >= STACK_SIZE) {
-            printf("Stack overflow error!\n");
-            return;
-          }
-          // push the address of the next instruction onto the stack
-          vm->stack[vm->sp++] = vm->pc;
-          // jump to the address specified by the operand
-          vm->pc = operand1;
-        }
-      }
-        break;
+      } break;
 
-      case CALL_IFNEQ:{
-        if (vm->ACC != operand2) {
-          if (vm->sp >= STACK_SIZE) {
-            printf("Stack overflow error!\n");
-            return;
-          }
-          // push the address of the next instruction onto the stack
-          vm->stack[vm->sp++] = vm->pc;
-          // jump to the address specified by the operand
-          vm->pc = operand1;
-        }
-      }
-        break;
-
-      case CALL_IFGT:{
-        if (vm->ACC > operand2) {
-          if (vm->sp >= STACK_SIZE) {
-            printf("Stack overflow error!\n");
-            return;
-          }
-          // push the address of the next instruction onto the stack
-          vm->stack[vm->sp++] = vm->pc;
-          // jump to the address specified by the operand
-          vm->pc = operand1;
-        }
-      }
-        break;
-
-      case CALL_IFLT:{
-        if (vm->ACC < operand2) {
-          if (vm->sp >= STACK_SIZE) {
-            printf("Stack overflow error!\n");
-            return;
-          }
-          // push the address of the next instruction onto the stack
-          vm->stack[vm->sp++] = vm->pc;
-          // jump to the address specified by the operand
-          vm->pc = operand1;
-        }
-      }
-        break;
-
-      case RET:
+      case RET: {
         if (vm->sp <= 0) {
-          printf("Stack underflow error!\n");
+          printf("RET: Stack underflow error!\n");
           return;
         }
         // pop the return address from the stack and jump to it
         vm->pc = vm->stack[--vm->sp];
-        break;
+      } break;
 
-      case HALT_IFEQ:
-        if (vm->ACC == operand1) {
-          running = 0; // stop the program
-        }
-        break;
-
-      case HALT_IFNEQ:
-        if (vm->ACC != operand1) {
-          running = 0; // stop the program
-        }
-        break;
-
-      case HALT_IFGT:
-        if (vm->ACC > operand1) {
-          running = 0; // stop the program
-        }
-        break;
-
-      case HALT_IFLT:
-        if (vm->ACC < operand1) {
-          running = 0; // stop the program
-        }
-        break;
-
-      case HALT:
-        running = 0; // stop the program
-        break;
+      case HALT: { running = 0; } break;
     }
   }
 }

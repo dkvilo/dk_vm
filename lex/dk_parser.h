@@ -23,8 +23,8 @@ typedef struct
 dk_parser_t*
 dk_parser_create(dk_token_t* p_token);
 
-// dk_ast_t*
-// dk_parser_parse(dk_parser_t* p_parser);
+dk_ast_t*
+dk_parser_parse(dk_parser_t* p_parser);
 
 void
 dk_parser_destroy(dk_parser_t* p_parser);

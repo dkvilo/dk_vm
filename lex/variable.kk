@@ -1,6 +1,4 @@
-i32 result = 4;
-i32 result = 1;
-i32 result = 2;
-i32 result = 3;
+i32 a = 4;
+i32 b = 1;
+i32 c = 10;
 
-add 22 + 11;

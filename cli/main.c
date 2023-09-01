@@ -325,12 +325,15 @@ int
 main(int argc, char** argv)
 {
 
+#if 0
   __bytecode = (int64_t *)malloc(sizeof(int64_t) * BYTECODE_SIZE);
   memset(__bytecode, 0, sizeof(int64_t) * BYTECODE_SIZE);
 
   parse_and_tokenize("./lex/variable.kk");
 
  return 0;
+
+#endif 
 
   if (argc < 2) {
     printf("Usage: %s <mode>\n", argv[0]);
@@ -343,31 +346,32 @@ main(int argc, char** argv)
   if (strcmp(argv[1], "emulate") == 0) {
     printf("Emulating...\n");
 
-    /*
-     * NOTE (David) this is the old architecture for VM
-     * */
     uintptr_t mul_ptr = 0x00000018;
     intptr_t div_ptr = 0x00000020;
 
     int64_t bytecode[] = {
-      LOAD, 20, 0, 0, // address 0
-      PUSH, 0, 0, 0, // address 4
+      LOAD, 10, 0, 0,
+      PUSH, 0, 0, 0, // PUSH 10 to stack
 
-      LOAD, 10, 0, 0, // address 8 
-      NOP, 0, 0, 0, // address 12 
+      LOAD, 20, 0, 0,
+      ADD, 0, 0, 0, // ADD 10 to ACC and store result in ACC
 
-      CALL, mul_ptr, 0, 0,  // address 16
       HALT, 0, 0, 0, // address 20
-
-      // Subroutine (function) multiply
-      MUL, 2, 0, 0,  // address 24
-      CALL, div_ptr, 0, 0, // address 28
-
-      // Subroutine (function) divide
-      DIV, 10, 0, 0, // address 32
-      RET, 0, 0, 0, // address 36
     };
-   
+
+    // int64_t bytecode2[] = {
+
+    //   // MOV, RAX, 0, 10, // RAX, 0, 10, // this will store 10 to RAX register
+    //   // MOV, RDI, RAX, 0, // RDI, RAX, 0, // this will store RAX value to RDI register (RDI = 10)
+
+    //   PUSH, 0, 0, 0, // PUSH 10 to stack
+
+    //   LOAD, 20, 0, 0,
+    //   SUB, 0, 0, 0, // SUB 10 to ACC and store result in ACC
+
+    //   HALT, 0, 0, 0, // address 20
+    // };
+
     // memcpy(__bytecode, bytecode, sizeof(bytecode));
 
     VM vm;

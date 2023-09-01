@@ -14,42 +14,43 @@
 #include "dk.h"
 #endif
 
-#define IsComment(c) (c == '#')
+// #define IsComment(c) (c == '#')
 
-#define IsNumber(c) (c >= '0' && c <= '9')
+// #define IsNumber(c) (c >= '0' && c <= '9')
 
-#define IsAlpha(c) ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+// #define IsAlpha(c) ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
 
-#define IsAlphaNum(c) (IsAlpha(c) || IsNumber(c))
+// #define IsAlphaNum(c) (IsAlpha(c) || IsNumber(c))
 
-#define IsAlphaNumUnderScore(c) (IsAlphaNum(c) || c == '_')
+// #define IsAlphaNumUnderScore(c) (IsAlphaNum(c) || c == '_')
 
-#define IsAlphaUnderScore(c) (IsAlpha(c) || c == '_')
+// #define IsAlphaUnderScore(c) (IsAlpha(c) || c == '_')
 
-#define IsString(c) (c == '"')
+// #define IsString(c) (c == '"')
 
-#define IsSemiColon(c) (c == ';')
+// #define IsSemiColon(c) (c == ';')
 
-#define IsWhiteSpace(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r')
+// #define IsWhiteSpace(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r')
 
-#define IsOperator(c)                                                          \
-  (c == '+' || c == '-' || c == '*' || c == '/' || c == '%' || c == '=' ||     \
-   c == '<' || c == '>' || c == '!' || c == '&' || c == '|' || c == '^' ||     \
-   c == '~')
+// #define IsOperator(c)                                                          \
+//   (c == '+' || c == '-' || c == '*' || c == '/' || c == '%' || c == '=' ||     \
+//    c == '<' || c == '>' || c == '!' || c == '&' || c == '|' || c == '^' ||     \
+//    c == '~')
 
-#define IsDelimiter(c)                                                         \
-  (c == '(' || c == ')' || c == '[' || c == ']' || c == ',' || c == ':' ||     \
-   c == c == '.' || c == '?' || c == '!' || c == '@' || c == '#' ||            \
-   c == '$' || c == '%' || c == '^' || c == '&' || c == '*' || c == '-' ||     \
-   c == '_' || c == '+' || c == '<')
+// #define IsDelimiter(c)                                                         \
+//   (c == '(' || c == ')' || c == '[' || c == ']' || c == ',' || c == ':' ||     \
+//    c == c == '.' || c == '?' || c == '!' || c == '@' || c == '#' ||            \
+//    c == '$' || c == '%' || c == '^' || c == '&' || c == '*' || c == '-' ||     \
+//    c == '_' || c == '+' || c == '<')
 
-#define IsDelimiterOrOperator(c) (IsDelimiter(c) || IsOperator(c))
+// #define IsDelimiterOrOperator(c) (IsDelimiter(c) || IsOperator(c))
 
-#define IsIdentifierStart(c) (IsAlpha(c) || c == '_')
+// #define IsIdentifierStart(c) (IsAlpha(c) || c == '_')
 
-#define IsIdentifierPart(c) (IsAlphaNum(c) || c == '_')
+// #define IsIdentifierPart(c) (IsAlphaNum(c) || c == '_')
 
-#define IsIdentifier(c) (IsIdentifierStart(c) || IsNumber(c))
+// #define IsIdentifier(c) (IsIdentifierStart(c) || IsNumber(c))
+
 
 typedef enum
 {
@@ -94,6 +95,7 @@ typedef enum
   DK_TOKEN_IMPORT,
   DK_TOKEN_MODULE,
   DK_TOKEN_USE,
+  DK_TOKEN_TYPE_REFRENCE,
 } dk_token_type_t;
 
 global_variable const struct
@@ -110,6 +112,7 @@ global_variable const struct
   { "struct", DK_TOKEN_STRUCT }, { "enum", DK_TOKEN_ENUM },
   { "import", DK_TOKEN_IMPORT }, { "mod", DK_TOKEN_MODULE },
   { "use", DK_TOKEN_USE },
+  { "@", DK_TOKEN_TYPE_REFRENCE },
 };
 
 typedef struct

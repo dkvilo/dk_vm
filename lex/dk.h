@@ -22,14 +22,6 @@
 #include <stdio.h> // printf
 #endif             // !defined(_STDIO_H)
 
-#if !defined(_STDLIB_H)
-#include <stdlib.h> // malloc
-#endif              // !defined(_STDLIB_H)
-
-#if !defined(_STDINT_H)
-#include <stdint.h> // intptr_t
-#endif              // !defined(_STDINT_H)
-
 typedef unsigned char u8_t;
 typedef unsigned short u16_t;
 typedef unsigned int u32_t;

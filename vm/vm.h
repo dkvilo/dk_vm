@@ -37,6 +37,7 @@ typedef enum
 
   DEC = 0x19, // Decrement ACC (parameter is ignored)
   INC = 0x1A, // Increment ACC (parameter is ignored)
+  STORE = 0x1B, // Store ACC in memory (parameter is memory address)
 
   HALT = 0xFF
 } OpCode;
