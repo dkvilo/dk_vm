@@ -124,7 +124,7 @@ parse_variable_declaration(dk_lexer_t lexer, int64_t *__bytecode, symbol_hashmap
     exit(1);
   }
 
-  symbol_table_add(symbol_table, variable_name, variable_value);
+  symbol_table_add(symbol_table, variable_name, variable_value, SYMBOL_Variable);
 
   /* Generate bytecode */
 

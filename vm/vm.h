@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define MEMORY_SIZE 1024 * 1000
-#define STACK_SIZE 256
+#define MEMORY_SIZE (1024 * 256) * 1024 // 256MB
+#define STACK_SIZE (1024 * 512) * 1 // 512KB
 
 // Instruction set
 typedef enum
@@ -36,7 +36,7 @@ typedef struct
   uint64_t pc;
   uint64_t sp;
   int64_t ACC;
-  int64_t memory[MEMORY_SIZE];
+  int64_t *memory;
   int64_t stack[STACK_SIZE];
 } VM;
 

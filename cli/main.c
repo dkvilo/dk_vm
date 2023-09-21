@@ -12,6 +12,15 @@ static int64_t *__bytecode = NULL;
 
 static symbol_hashmap_t *symbol_table = NULL;
 
+
+static int __index = 0;
+void put_inst(int64_t *__bytecode, int32_t index, int64_t instruction)
+{
+  __bytecode[index] = instruction;
+  __index = index;
+  __index++;
+}
+
 int
 main(int argc, char** argv)
 {
@@ -43,15 +52,50 @@ main(int argc, char** argv)
   }
 
   if (strcmp(argv[1], "emulate") == 0) {
-    parse_and_tokenize(argv[2], __bytecode, BYTECODE_SIZE, symbol_table);
+    /* parse_and_tokenize(argv[2], __bytecode, BYTECODE_SIZE, symbol_table); */
 
-    VM vm;
-    vm_init(&vm);
-    vm_exec(&vm, __bytecode, sizeof(int64_t) * BYTECODE_SIZE);
-    vm_print_state(&vm);
+    put_inst(__bytecode, __index, LOAD); // Load the value 5 into the accumulator
+    put_inst(__bytecode, __index, 10000000000); 
+    put_inst(__bytecode, __index, 0);
+    put_inst(__bytecode, __index, 0);
 
-    printf("-----------------------\nSymbol table (%d):\n", symbol_table->count);
-    symbol_table_print(symbol_table);
+    put_inst(__bytecode, __index, JZ); // Jump to HALT if ACC is zero
+    put_inst(__bytecode, __index, 0x00000010); // Jump offset (to HALT)
+    put_inst(__bytecode, __index, 0);
+    put_inst(__bytecode, __index, 0);
+
+    put_inst(__bytecode, __index, DEC); // Decrement the accumulator
+    put_inst(__bytecode, __index, 0);
+    put_inst(__bytecode, __index, 0);
+    put_inst(__bytecode, __index, 0);
+
+    // put_inst(__bytecode, __index, SUB); // Decrement the accumulator by a larger step (e.g., 100)
+    // put_inst(__bytecode, __index, 10000);
+    // put_inst(__bytecode, __index, 0);
+    // put_inst(__bytecode, __index, 0);
+
+
+    put_inst(__bytecode, __index, JMP); // Jump back to the JZ instruction
+    put_inst(__bytecode, __index, 0x00000004); // Jump offset (to JZ)
+    put_inst(__bytecode, __index, 0);
+    put_inst(__bytecode, __index, 0);
+
+    put_inst(__bytecode, __index, HALT); // Halt the program
+    put_inst(__bytecode, __index, 0);
+    put_inst(__bytecode, __index, 0);
+    put_inst(__bytecode, __index, 0);
+
+
+    compile(__bytecode, sizeof(__bytecode) * BYTECODE_SIZE);
+
+
+    // VM vm;
+    // vm_init(&vm);
+    // vm_exec(&vm, __bytecode, sizeof(int64_t) * BYTECODE_SIZE);
+    // vm_print_state(&vm);
+
+    // printf("-----------------------\nSymbol table (%d):\n", symbol_table->count);
+    // symbol_table_print(symbol_table);
   }
 
   return 0;

@@ -4,8 +4,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+typedef enum symbol_type {
+	SYMBOL_None,
+	SYMBOL_Variable,
+	SYMBOL_Struct,
+	SYMBOL_Function,
+	SYMBOL_Count
+} symbol_type;
+
 typedef struct symbol_t {
   int8_t *name;
+	symbol_type type;
   union
   {
     int64_t value;
@@ -16,10 +25,11 @@ typedef struct symbol_t {
 typedef struct symbol_hashmap_t {
   symbol_t *symbols; // symbol
   char **keys; // symbol name
-  int count;
+  int scope;
+	int count;
 } symbol_hashmap_t;
 
-void symbol_table_add(symbol_hashmap_t *table, int8_t *name, int64_t value);
+void symbol_table_add(symbol_hashmap_t *table, int8_t *name, int64_t value, symbol_type type);
 
 symbol_t symbol_table_get_by_index(symbol_hashmap_t *table, int index);
 

@@ -20,6 +20,25 @@ compile(int64_t bytecode[], size_t size)
       printf("  push %lld\n", value);
     }
 
+    else if (opcode == JZ) {
+      printf(";; --- JZ\n");
+      printf("  pop rax\n");   // Pop value from the stack
+      printf("  test rax, rax\n"); // Test if it's zero
+      printf("  jz .jmp_target_%d\n", i); // Jump if zero
+    }
+
+    else if (opcode == DEC) {
+      printf(";; --- DEC\n");
+      printf("  pop rax\n");   // Pop value from the stack
+      printf("  dec rax\n");   // Decrement value
+      printf("  push rax\n");  // Push updated value onto the stack
+    }
+
+    else if (opcode == JMP) {
+      printf(";; --- JMP\n");
+      printf("  jmp .jmp_target_%d\n", i); // Unconditional jump
+    }
+
     else if (opcode == ADD) {
       printf(";; --- ADD\n");
       printf("  pop rax\n");
@@ -55,6 +74,9 @@ compile(int64_t bytecode[], size_t size)
     else {
       continue;
     }
+
+    // Label for jump targets
+    printf(".jmp_target_%d:\n", i);
   }
 
   printf("  pop rdi\n");

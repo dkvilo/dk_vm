@@ -11,7 +11,9 @@ vm_init(VM* vm)
   vm->ACC = 0;
   vm->sp = 0;
 
+  vm->memory = (int64_t *)malloc(sizeof(int64_t) * MEMORY_SIZE);
   memset(vm->memory, 0, sizeof(vm->memory));
+
   memset(vm->stack, 0, sizeof(vm->stack));
 }
 
@@ -128,7 +130,7 @@ vm_exec(VM* vm, int64_t* code, size_t size)
       case PUSH: {
         if (vm->sp >= STACK_SIZE) {
           printf("PUSH: Stack overflow error!\n");
-          return;
+          exit(EXIT_FAILURE);
         }
         vm->stack[vm->sp++] = vm->ACC;
       } break;
@@ -144,7 +146,7 @@ vm_exec(VM* vm, int64_t* code, size_t size)
       case POP: {
         if (vm->sp <= 0) {
           printf("Error: Unable to execute POP instruction, Stack underflow!\n");
-          return;
+          exit(EXIT_FAILURE);
         }
         vm->ACC = vm->stack[--vm->sp];
       } break;
@@ -152,7 +154,7 @@ vm_exec(VM* vm, int64_t* code, size_t size)
       case ADD: {
         if (vm->sp <= 0) {
           printf("ADD: Stack underflow error!\n");
-          return;
+          exit(EXIT_FAILURE);
         }
 
         int64_t a = vm->stack[--vm->sp];
@@ -171,8 +173,8 @@ vm_exec(VM* vm, int64_t* code, size_t size)
       
       case STORE: {
         if (operand1 < 0 || operand1 >= MEMORY_SIZE) {
-            fprintf(stderr, "Error: Invalid memory address for STORE instruction\n");
-            exit(EXIT_FAILURE);
+          fprintf(stderr, "Error: Invalid memory address for STORE instruction\n");
+          exit(EXIT_FAILURE);
         }
         vm->memory[operand1] = vm->ACC;
       } break;
@@ -180,19 +182,33 @@ vm_exec(VM* vm, int64_t* code, size_t size)
       case SUB: { vm->ACC -= operand1; } break;
       case MUL: { vm->ACC *= operand1; } break;
       case DIV: { vm->ACC /= operand1; } break;
-      case JMP: { vm->pc = operand1; } break;
+      case JMP: {
+        if (operand1 < 0 || operand1 >= MEMORY_SIZE) {
+          fprintf(stderr, "Error: Invalid jump address for JMP instruction\n");
+          exit(EXIT_FAILURE);
+        }
+        vm->pc = operand1;
+      } break;
 
       case INC: { vm->ACC++; } break;
       case DEC: { vm->ACC--; } break;
 
       case JZ: {
         if (vm->ACC == 0) {
+          if (operand1 < 0 || operand1 >= MEMORY_SIZE) {
+            fprintf(stderr, "Error: Invalid jump address for JZ instruction\n");
+            exit(EXIT_FAILURE);
+          }
           vm->pc = operand1;
         }
       } break;
 
       case JNZ: {
         if (vm->ACC != 0) {
+          if (operand1 < 0 || operand1 >= MEMORY_SIZE) {
+            fprintf(stderr, "Error: Invalid jump address for JNZ instruction\n");
+            exit(EXIT_FAILURE);
+          }
           vm->pc = operand1;
         }
       } break;
@@ -200,7 +216,7 @@ vm_exec(VM* vm, int64_t* code, size_t size)
       case CALL: {
         if (vm->sp >= STACK_SIZE) {
           printf("CALL: Stack overflow error!\n");
-          return;
+          exit(EXIT_FAILURE);
         }
         // push the address of the next instruction onto the stack
         vm->stack[vm->sp++] = vm->pc;
@@ -211,7 +227,7 @@ vm_exec(VM* vm, int64_t* code, size_t size)
       case RET: {
         if (vm->sp <= 0) {
           printf("RET: Stack underflow error!\n");
-          return;
+          exit(EXIT_FAILURE);
         }
         // pop the return address from the stack and jump to it
         vm->pc = vm->stack[--vm->sp];
