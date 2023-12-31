@@ -1,8 +1,8 @@
 #include "vm.h"
 
-#include <stdlib.h> // exit, EXIT_FAILURE
-#include <stdio.h> // fprintf, stderr
-#include <string.h> // memset
+#include <stdlib.h> /* exit, EXIT_FAILURE */
+#include <stdio.h>  /* fprintf, stderr */
+#include <string.h> /* memset */
 
 void
 vm_init(VM* vm)
@@ -97,6 +97,8 @@ inst_to_str(OpCode opcode)
     case LOADS: return "LOADS"; break;
     case HALT: return "HALT"; break;
     case RET: return "RET"; break;
+    case EXIT: return "EXIT"; break;
+    case DUMP: return "DUMP"; break;
     default: return "UNKNOWN"; break;
   }
 }
@@ -158,7 +160,7 @@ vm_exec(VM* vm, int64_t* code, size_t size)
         int64_t a = vm->stack[--vm->sp];
         int64_t b = vm->stack[--vm->sp];
 
-        // clear the stack
+        /* clear the stack */
         for (int i = 0; i < vm->sp; i++) {
           vm->stack[i] = 0;
         }
@@ -167,6 +169,15 @@ vm_exec(VM* vm, int64_t* code, size_t size)
 
         int64_t value = a + b;
         vm->ACC = value;
+      } break;
+
+      case EXIT: {
+        printf("EXIT: %lld\n", vm->ACC);
+        return;
+      } break;
+
+      case DUMP: {
+        printf("ACC: %lld\n", vm->ACC);
       } break;
       
       case STORE: {
@@ -202,9 +213,9 @@ vm_exec(VM* vm, int64_t* code, size_t size)
           printf("CALL: Stack overflow error!\n");
           return;
         }
-        // push the address of the next instruction onto the stack
+        /* push the address of the next instruction onto the stack */
         vm->stack[vm->sp++] = vm->pc;
-        // jump to the address specified by the operand
+        /* jump to the address specified by the operand */
         vm->pc = operand1;
       } break;
 
@@ -213,7 +224,7 @@ vm_exec(VM* vm, int64_t* code, size_t size)
           printf("RET: Stack underflow error!\n");
           return;
         }
-        // pop the return address from the stack and jump to it
+        /* pop the return address from the stack and jump to it */
         vm->pc = vm->stack[--vm->sp];
       } break;
 

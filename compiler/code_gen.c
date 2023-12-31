@@ -16,7 +16,6 @@ compile(int64_t bytecode[], size_t size)
     OpCode opcode = bytecode[i];
     if (opcode == LOAD) {
       int64_t value = bytecode[i + 1];
-      printf(";; --- LOAD %lld\n", value);
       printf("  push %lld\n", value);
     }
 
@@ -52,15 +51,29 @@ compile(int64_t bytecode[], size_t size)
       printf("  push rax\n");
     }
 
+    else if (opcode == DUMP) {
+      printf(";; --- DUMP\n");
+      printf("  pop rdi\n");
+      printf("  call .sys_dump\n");
+    }
+
+    else if (opcode == EXIT) {
+      /* we already have the return value on the stack */
+      /* so we need to pop it to `rdi` and call exit */
+      printf(";; --- EXIT\n");
+      printf("  pop rdi\n");
+      printf("  call .exit_with_value\n");
+    }
+
     else {
       continue;
     }
   }
 
-  printf("  pop rdi\n");
-  printf("  call .sys_dump\n");
+  /* printf("  pop rdi\n"); */
+  /* printf("  call .sys_dump\n"); */
 
   /* pop return value from stack to  `rdi` */
-  printf("  mov rdi, 0\n");
-  printf("  call .exit_with_value\n");
+  /* printf("  mov rdi, 0\n"); */
+  /* printf("  call .exit_with_value\n"); */
 }

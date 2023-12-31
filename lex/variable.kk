@@ -1,14 +1,9 @@
 i32 x = 8;
 i32 y = 16;
+i32 z = x * y;
 
-/**
- * this expression is calculated at compile time 
- * */
-i32 z = x * y; // compile time
+i32 result = z * 4;
+i32 result_sqrt = result * result;
 
-// this is too
-i32 result = z * 2; // compile time
-
-
-
-
+if result > 0 then print(result_sqrt)
+if result > 0 then exit(0)

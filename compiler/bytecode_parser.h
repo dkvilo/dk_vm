@@ -21,5 +21,4 @@ void
 parse_and_tokenize(const char* filename, int64_t *__bytecode, size_t byte_code_count, symbol_hashmap_t *symbol_table);
 
 
-
 #endif // _ME_BYTECODE_PARSER_

@@ -28,6 +28,9 @@ typedef enum
   INC = 0x1A, // Increment ACC (parameter is ignored)
   STORE = 0x1B, // Store ACC in memory (parameter is memory address)
 
+  EXIT = 0xFE,
+  DUMP = 0xFD,
+
   HALT = 0xFF
 } OpCode;
 
